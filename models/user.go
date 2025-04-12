@@ -19,7 +19,7 @@ type User struct {
 	ProfilePictureURL string      `gorm:"type:varchar(255)" json:"profile_picture_url"`
 	IsVerified        bool        `gorm:"default:false" json:"is_verified"`
 	Cart              Cart        `gorm:"foreignKey:UserID" json:"cart"`
-	Orders            []order     `gorm:"foreignKey:UserID" json:"orders"`
+	Orders            []Order     `gorm:"foreignKey:UserID" json:"orders"`
 	Address           []Address   `gorm:"foreignKey:UserID" json:"address"`
 	Wishlist          Wishlist    `gorm:"foreignKey:UserID" json:"wishlist"`
 	Reviews           []Review    `gorm:"foreignKey:UserID" json:"reviews"`

@@ -2,7 +2,7 @@ package models
 
 import "gorm.io/gorm"
 
-type cart struct {
+type Cart struct {
 	gorm.Model
 	UserID uint       `json:"user_id"`
 	Items  []CartItem `gorm:"foreignKey:CartID"`
