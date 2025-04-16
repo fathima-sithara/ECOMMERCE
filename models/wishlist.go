@@ -6,7 +6,7 @@ import (
 
 type Wishlist struct {
 	gorm.Model
-	UserID uint           `json:"user_id"`
+	UserID uint           `json:"user_id"` //foreignKey  user
 	Items  []WishlistItem `gorm:"foreignKey:WishlistID"`
 }
 

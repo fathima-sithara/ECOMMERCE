@@ -31,6 +31,7 @@ type Payment struct {
 	Method        string  `json:"method" gorm:"not null" validate:"required"` // e.g., "Credit Card", "PayPal", "Bank Transfer"
 	Status        string  `json:"status" gorm:"default:'pending'"`            // e.g., "pending", "completed", "failed"
 	TransactionID string  `json:"transaction_id"`                             // Optional for transaction reference
+
 }
 
 type DemoOrder struct {
@@ -38,7 +39,7 @@ type DemoOrder struct {
 	Street        string         `json:"street" gorm:"not null" validate:"required"`
 	City          string         `json:"city" gorm:"not null" validate:"required"`
 	State         string         `json:"state" gorm:"not null" validate:"required"`
-	Pymentmetherd string         `json:"pyment_metherd" validate:"required"`
+	Pymentmetheod string         `json:"pyment_metheod" validate:"required"`
 	ZipCode       string         `json:"zip_code" gorm:"not null" validate:"required"`
 	Country       string         `json:"country" gorm:"not null" validate:"required"`
 	OrderItem     []OrderItem    `json:"order_items" validate:"dive,required"`
