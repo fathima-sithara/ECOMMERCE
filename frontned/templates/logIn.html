@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | MyApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50 flex items-center justify-center min-h-screen px-4">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+      <div class="text-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Welcome Back</h1>
+        <p class="text-sm text-gray-500 mt-1">Login to your account</p>
+      </div>
+
+      <form action="/logIn" method="POST" class="space-y-5">
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 mb-1"
+            for="email"
+            >Email</label
+          >
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 mb-1"
+            for="password"
+            >Password</label
+          >
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+        </div>
+
+        <div class="flex items-center justify-between">
+          <label class="flex items-center text-sm">
+            <input type="checkbox" class="mr-2" />
+            Remember me
+          </label>
+          <a
+            href="forgotPassword.html"
+            class="text-sm text-blue-600 hover:underline"
+            >Forgot password?</a
+          >
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 font-semibold"
+        >
+          Sign In
+        </button>
+      </form>
+
+      <p class="mt-6 text-center text-sm text-gray-600">
+        Don’t have an account?
+        <a href="logOut.html" class="text-blue-600 hover:underline">Sign up</a>
+      </p>
+    </div>
+  </body>
+</html>
