@@ -12,63 +12,76 @@ var JwtKey = []byte(os.Getenv("SECRET"))
 
 type JWTClaim struct {
 	Id string `json:"id"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
+// GenerateJWT creates both access and refresh tokens
 func GenerateJWT(id string) (map[string]string, error) {
+	// Access Token Claims
 	expirationTime := time.Now().Add(1 * time.Hour)
-	claims := &JWTClaim{
+	accesClaims := &JWTClaim{
 		Id: id,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			// ExpiresAt: expirationTime,
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Subject:   id,
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+
+	// Create access token
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, accesClaims)
 	tokenString, err := token.SignedString(JwtKey)
 	if err != nil {
 		return nil, err
 	}
 
-	refrehToken := jwt.New(jwt.SigningMethodES256)
-	rTokenClaims := refrehToken.Claims.(jwt.MapClaims)
-	rTokenClaims["id"] = id
+	// Refresh Token Claims (simpler, using MapClaims)
+	refrehToken := jwt.New(jwt.SigningMethodES256)      // Creating a New JWT (Refresh Token)
+	refreshClaims := refrehToken.Claims.(jwt.MapClaims) //Setting the Claims (Data) for the Token
+	refreshClaims["id"] = id
+	refreshClaims["exp"] = time.Now().Add(time.Hour * 24).Unix()
 
-	rTokenClaims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-	rt, err := refrehToken.SignedString([]byte("secret"))
+	// Sign refresh token (ideally use a separate secret for refresh tokens)
+	reefreshTokenString, err := refrehToken.SignedString([]byte("secret")) // Sign the token using a secret key to ensure it’s secure and Return the signed refresh token.
 	if err != nil {
 		return nil, err
 	}
 
 	return map[string]string{
 		"access_token":  tokenString,
-		"refresh_Token": rt,
+		"refresh_Token": reefreshTokenString,
 	}, nil
 }
 
-var P string
+var P string //// Global variable to store the ID from the claims
 
-func VlidateToken(signedToken string) (err error) {
+// ValidateToken validates the JWT token
+func ValidateToken(signedToken string) error {
 	token, err := jwt.ParseWithClaims(
 		signedToken,
 		&JWTClaim{},
 		func(token *jwt.Token) (interface{}, error) {
-			return []byte(JwtKey), nil
+			return JwtKey, nil
 		},
 	)
 
-	if err != nil {
-		return
+	if err != nil || !token.Valid {
+		return errors.New("invalid token")
 	}
 
 	claims, ok := token.Claims.(*JWTClaim)
-	P = claims.Id
 	if !ok {
-		err = errors.New("couldn't parsw claims")
-		return
+		return errors.New("couldn't parse claims")
 	}
-	if claims.ExpiresAt < time.Now().Local().Unix() {
-		err = errors.New("token expired")
-		return
+
+	// Set the global user ID from claims for use in the middleware
+	P = claims.Id
+
+	// Check token expiration
+	if claims.ExpiresAt.Time.Before(time.Now()) {
+		return errors.New("token expired")
 	}
-	return
+
+	return nil
 }

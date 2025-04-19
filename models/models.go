@@ -76,7 +76,7 @@ type Cart struct {
 	Price      uint
 	TotalPrice uint
 	Userid     uint
-	User       User `gorm:"ForignKey:Userid"`
+	User       User `gorm:"ForeignKey:Userid"`
 }
 
 type Address struct {
