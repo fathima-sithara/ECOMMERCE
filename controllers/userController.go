@@ -17,100 +17,117 @@ var validate = validator.New()
 func SignUp(c *gin.Context) {
 	var user models.User
 
-	// Bind the incoming JSON to the user struct
+	// Bind incoming JSON to struct
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input", "details": err.Error()})
 		return
 	}
 
-	// Validate user input
-	if err := validate.Struct(user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Validate input using struct tags
+	if err := validate.Struct(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Validation failed", "details": err.Error()})
 		return
 	}
 
+	// Hash user password
 	if err := user.HashPassword(user.Password); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
 
+	otp, err := VerifyAndSendOTP(user.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP", "details": err.Error()})
+		return
+	}
+	user.Otp = otp
+	// Save user to database
 	if err := database.InitDB().Create(&user).Error; err != nil {
-		c.JSON(500, gin.H{
-			"status": "false",
-			"Eroor":  err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user", "details": err.Error()})
+		return
 	}
 
-	// Optionally, you may generate an OTP here and send it to the user's email
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Registration successful, please proceed to OTP validation.",
+		"message": "Regitration successful. Please verify your account via OTP.",
 	})
 }
 
+// UserLogin is the login input payload
 type UserLogin struct {
-	Email        string
-	Password     string
-	Block_status bool
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
 }
 
+// LoginUser handles user login and JWT generation
 func LoginUser(c *gin.Context) {
-	var userLogin UserLogin
+	var input UserLogin
 	var user models.User
 
-	// Bind the incoming JSON to the userLogin struct
-	if err := c.ShouldBindJSON(&userLogin); err != nil {
-		c.JSON(404, gin.H{"error": err.Error()})
-		c.Abort()
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input", "details": err.Error()})
 		return
 	}
 
-	// Fetch the user from the database by email
-	if err := database.InitDB().Where("email = ?", userLogin.Email).First(&user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error.Error()})
+	// Validate input
+	if err := validate.Struct(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Validation error", "details": err.Error()})
 		return
 	}
 
+	db := database.InitDB()
+	if err := db.Where("email = ?", input.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check verification and block status
 	if !user.Verified {
-		database.InitDB().Delete(&user)
+		db.Delete(&user)
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"error":    "user is not verified. data deleted",
-			"meassage": "please complete OTP verificatioon to complete registration",
+			"error":   "User not verified. Account deleted.",
+			"message": "Please complete OTP verification.",
 		})
 		return
 	}
 
 	if user.Block_Status {
-		c.JSON(http.StatusForbidden, gin.H{"msg": "user has been blocked by admin"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "User is blocked by admin"})
 		return
 	}
 
-	if credentailCheckErr := user.CheckPassword(userLogin.Password); credentailCheckErr != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+	// Check password
+	if err := user.CheckPassword(input.Password); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	str := strconv.Itoa(int(user.ID))
-	tokenString, err := auth.GenerateJWT(str)
+	// Generate JWT
+	userID := strconv.Itoa(int(user.ID))
+	tokens, err := auth.GenerateJWT(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
-	c.SetCookie("UserAuth", tokenString["accessString"], 3600*24*30, "", "", false, true)
+	// Set secure cookie
+	c.SetCookie("UserAuth", tokens["access_token"], 3600*24*30, "/", "", false, true)
 
-	c.JSON(200, gin.H{
-		"email":    userLogin.Email,
-		"password": userLogin.Password,
-		"token":    tokenString["access_token"]})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"token":   tokens["access_token"],
+	})
 }
 
+// UserHome serves the protected home endpoint
 func UserHome(c *gin.Context) {
-	c.JSON(200, gin.H{"msg": "wellcomme user home"})
+	c.JSON(http.StatusOK, gin.H{"message": "Welcome to user home"})
 }
 
+// LogoutUser clears the auth cookie
 func LogoutUser(c *gin.Context) {
-	c.SetCookie("UsereAuth", "", -1, "", "", false, false)
-	c.JSON(200, gin.H{
-		"message": "user sussessfully Log out",
+	// Clear cookie
+	c.SetCookie("UserAuth", "", -1, "/", "", false, true)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Successfully logged out",
 	})
 }
