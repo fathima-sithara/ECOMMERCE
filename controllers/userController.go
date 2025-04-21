@@ -7,6 +7,7 @@ import (
 	"github.com/fathima-sithara/ecommerce/auth"
 	"github.com/fathima-sithara/ecommerce/database"
 	"github.com/fathima-sithara/ecommerce/models"
+	"github.com/fathima-sithara/ecommerce/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -35,7 +36,7 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	otp, err := VerifyAndSendOTP(user.Email)
+	otp, err := utils.VerifyAndSendOTP(user.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP", "details": err.Error()})
 		return
