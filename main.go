@@ -3,8 +3,10 @@ package main
 import (
 	"os"
 
-	"github.com/fathima-sithara/ecommerce/database"
 	"github.com/gin-gonic/gin"
+
+	"github.com/fathima-sithara/ecommerce/database"
+	"github.com/fathima-sithara/ecommerce/routes"
 )
 
 func main() {
@@ -15,7 +17,10 @@ func main() {
 
 	database.InitDB()
 
-	r := gin.Default()
-	r.LoadHTMLGlob("templates/*")
-	r.Run()
+	router := gin.Default()
+	router.LoadHTMLGlob("templates/*")
+	routes.UserRoutes(router)
+	routes.AdminRoutes(router)
+
+	router.Run()
 }

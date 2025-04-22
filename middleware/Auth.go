@@ -3,8 +3,9 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/fathima-sithara/ecommerce/auth"
 	"github.com/gin-gonic/gin"
+
+	"github.com/fathima-sithara/ecommerce/auth"
 )
 
 func UserAuth() gin.HandlerFunc {
@@ -25,6 +26,24 @@ func UserAuth() gin.HandlerFunc {
 		}
 		userId := auth.P
 		c.Set("userid", userId)
+		c.Next()
+	}
+}
+
+func AdminAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenStirng, err := c.Cookie("AdminAuth")
+		if tokenStirng == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "request does not ccontain  an access token"})
+			c.Abort()
+			return
+		}
+		err = auth.ValidateToken(tokenStirng)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			c.Abort()
+			return
+		}
 		c.Next()
 	}
 }

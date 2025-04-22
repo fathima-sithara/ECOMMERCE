@@ -4,12 +4,13 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+
 	"github.com/fathima-sithara/ecommerce/auth"
 	"github.com/fathima-sithara/ecommerce/database"
 	"github.com/fathima-sithara/ecommerce/models"
 	"github.com/fathima-sithara/ecommerce/utils"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 var validate = validator.New()
@@ -31,7 +32,7 @@ func SignUp(c *gin.Context) {
 	}
 
 	// Hash user password
-	if err := user.HashPassword(user.Password); err != nil {
+	if err := utils.UserHashPassword(user.Password); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
@@ -97,7 +98,7 @@ func LoginUser(c *gin.Context) {
 	}
 
 	// Check password
-	if err := user.CheckPassword(input.Password); err != nil {
+	if err := utils.UserCheckPassword(input.Password); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}

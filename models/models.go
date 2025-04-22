@@ -3,7 +3,6 @@ package models
 import (
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -25,24 +24,6 @@ type Admin struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
-
-func (user *User) HashPassword(password string) error {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	if err != nil {
-		return err
-	}
-	user.Password = string(bytes)
-	return nil
-}
-
-func (user *User) CheckPassword(inputPassword string) error {
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(inputPassword))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 type Product struct {
 	gorm.Model
 	ProductId   uint     `json:"product_id" gorm:"autoIncrement"`
