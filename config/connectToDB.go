@@ -15,7 +15,7 @@ import (
 var Db *gorm.DB
 
 func InitDB() *gorm.DB {
-	if err := godotenv.Load(".env"); err != nil {
+	if err := godotenv.Load("../.env"); err != nil {
 		log.Fatal(err)
 	}
 	Db = connectDB()
@@ -45,7 +45,7 @@ func connectDB() *gorm.DB {
 		&models.User{},
 		&models.Admin{},
 		&models.Product{},
-		// &models.Category{}, // Fixed typo from Categery
+		&models.Categery{}, // Fixed typo from Categery
 		&models.Brand{},
 		&models.Address{},
 		&models.Cart{},

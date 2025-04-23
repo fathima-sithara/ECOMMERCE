@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	port := os.Getenv("PORT")
+	port := os.Getenv("DB_PORT")
 	if port == "" {
 		port = "8080"
 	}
