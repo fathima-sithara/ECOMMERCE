@@ -8,7 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 
 	"github.com/fathima-sithara/ecommerce/auth"
-	"github.com/fathima-sithara/ecommerce/database"
+	"github.com/fathima-sithara/ecommerce/config"
 	"github.com/fathima-sithara/ecommerce/models"
 	"github.com/fathima-sithara/ecommerce/utils"
 )
@@ -44,7 +44,7 @@ func SignUp(c *gin.Context) {
 	}
 	user.Otp = otp
 	// Save user to database
-	if err := database.InitDB().Create(&user).Error; err != nil {
+	if err := config.InitDB().Create(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user", "details": err.Error()})
 		return
 	}
@@ -76,7 +76,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	db := database.InitDB()
+	db := config.InitDB()
 	if err := db.Where("email = ?", input.Email).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return

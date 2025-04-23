@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/fathima-sithara/ecommerce/database"
+	"github.com/fathima-sithara/ecommerce/config"
 	"github.com/fathima-sithara/ecommerce/models"
 	"github.com/fathima-sithara/ecommerce/utils"
 )
@@ -36,7 +36,7 @@ func ValidateOTPHandler(c *gin.Context) {
 		return
 	}
 
-	db := database.InitDB()
+	db := config.InitDB()
 	var user models.User
 
 	if err := db.Where("email = ? AND otp = ?", req.Email, req.OTP).First(&user).Error; err != nil {
@@ -64,7 +64,7 @@ func SendForgotPasswordOTPHandler(c *gin.Context) {
 		return
 	}
 
-	db := database.InitDB()
+	db :=config.InitDB()
 	var user models.User
 
 	if err := db.Where("email = ?", req.Email).First(&user).Error; err != nil {
@@ -100,7 +100,7 @@ func ChangePasswordHandler(c *gin.Context) {
 		return
 	}
 
-	db := database.InitDB()
+	db := config.InitDB()
 	var user models.User
 
 	if err := db.Where("email = ?", req.Email).First(&user).Error; err != nil {

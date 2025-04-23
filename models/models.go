@@ -8,9 +8,9 @@ import (
 
 type User struct {
 	ID           uint   `json:"id" gorm:"primaryKey;unique"`
-	First_Name   string `json:"first_name" gorm:"not null" validate:"required,miin=2,max=50"`
+	First_Name   string `json:"first_name" gorm:"not null" validate:"required,min=2,max=50"`
 	Last_Name    string `json:"last_name" gorm:"not null" validate:"required,min=2,max=50"`
-	Email        string `json:"email" gorm:"not null;unique" validate:"eamil,required"`
+	Email        string `json:"email" gorm:"not null;unique" validate:"required"`
 	Password     string `json:"password" gorm:"not null" validate:"required"`
 	Phone        string `json:"phone" gorm:"not null;unique" validate:"required"`
 	Otp          string `json:"otp"`
