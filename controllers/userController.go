@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 
-	"github.com/fathima-sithara/ecommerce/auth"
 	"github.com/fathima-sithara/ecommerce/config"
 	"github.com/fathima-sithara/ecommerce/models"
 	"github.com/fathima-sithara/ecommerce/utils"
@@ -105,14 +104,14 @@ func LoginUser(c *gin.Context) {
 
 	// Generate JWT
 	userID := strconv.Itoa(int(user.ID))
-	tokens, err := auth.GenerateJWT(userID)
+	tokens, err := utils.GenerateJWT(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
 	// Set secure cookie
-	c.SetCookie("UserAuth", tokens["access_token"], 3600*24*30, "/", "", false, true)
+	c.SetCookie("Userutils", tokens["access_token"], 3600*24*30, "/", "", false, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
@@ -125,10 +124,10 @@ func UserHome(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Welcome to user home"})
 }
 
-// LogoutUser clears the auth cookie
+// LogoutUser clears the utils cookie
 func LogoutUser(c *gin.Context) {
 	// Clear cookie
-	c.SetCookie("UserAuth", "", -1, "/", "", false, true)
+	c.SetCookie("Userutils", "", -1, "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Successfully logged out",
 	})

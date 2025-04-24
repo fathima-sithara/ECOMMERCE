@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/fathima-sithara/ecommerce/auth"
+	"github.com/fathima-sithara/ecommerce/utils"
 )
 
 func UserAuth() gin.HandlerFunc {
@@ -18,13 +18,13 @@ func UserAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		err = auth.ValidateToken(tokenString)
+		err = utils.ValidateToken(tokenString)
 		if err != nil {
 			c.JSON(401, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
-		userId := auth.P
+		userId := utils.P
 		c.Set("userid", userId)
 		c.Next()
 	}
@@ -38,7 +38,7 @@ func AdminAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		err = auth.ValidateToken(tokenStirng)
+		err = utils.ValidateToken(tokenStirng)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()

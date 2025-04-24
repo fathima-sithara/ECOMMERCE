@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/fathima-sithara/ecommerce/auth"
 	"github.com/fathima-sithara/ecommerce/config"
 	"github.com/fathima-sithara/ecommerce/models"
 	"github.com/fathima-sithara/ecommerce/utils"
@@ -63,7 +62,7 @@ func AdminSignup(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Admin created successfully"})
 }
 
-// AdminLogin authenticates an admin and returns JWT token
+// AdminLogin utilsenticates an admin and returns JWT token
 func AdminLogin(c *gin.Context) {
 	var req AdminLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -83,7 +82,7 @@ func AdminLogin(c *gin.Context) {
 		return
 	}
 
-	tokenMap, err := auth.GenerateJWT(admin.Email)
+	tokenMap, err := utils.GenerateJWT(admin.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
