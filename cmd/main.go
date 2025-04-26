@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/fathima-sithara/ecommerce/config"
-	"github.com/fathima-sithara/ecommerce/routes"
+	"github.com/fathimasithara01/ecommerce/database"
+	"github.com/fathimasithara01/ecommerce/routes"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
 		port = "8080"
 	}
 
-	config.InitDB()
+	database.InitDB()
 
 	router := gin.Default()
 	// router.LoadHTMLGlob("templates/*")

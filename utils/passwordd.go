@@ -3,7 +3,7 @@ package utils
 import (
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/fathima-sithara/ecommerce/models"
+	"github.com/fathimasithara01/ecommerce/models"
 )
 
 var admin models.Admin

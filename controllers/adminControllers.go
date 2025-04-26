@@ -8,9 +8,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/fathima-sithara/ecommerce/config"
-	"github.com/fathima-sithara/ecommerce/models"
-	"github.com/fathima-sithara/ecommerce/utils"
+	"github.com/fathimasithara01/ecommerce/database"
+	"github.com/fathimasithara01/ecommerce/models"
+	"github.com/fathimasithara01/ecommerce/utils"
 )
 
 type AdminLoginRequest struct {
@@ -43,7 +43,7 @@ func AdminSignup(c *gin.Context) {
 		return
 	}
 
-	db := config.InitDB()
+	db := database.InitDB()
 	if err := db.Where("email = ?", admin.Email).First(&models.Admin{}).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Admin already exists with this email"})
 		return
@@ -70,7 +70,7 @@ func AdminLogin(c *gin.Context) {
 		return
 	}
 
-	db := config.InitDB()
+	db := database.InitDB()
 	var admin models.Admin
 	if err := db.Where("email = ?", req.Email).First(&admin).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
@@ -111,7 +111,7 @@ func UserData(c *gin.Context) {
 	offset := (page - 1) * limit
 	var users []UserResponse
 
-	db := config.InitDB()
+	db := database.InitDB()
 	if err := db.Table("users").
 		Select("id, first_name, last_name, email, phone").
 		Limit(limit).Offset(offset).Scan(&users).Error; err != nil {
@@ -126,7 +126,7 @@ func UserData(c *gin.Context) {
 func ShowAllOrders(c *gin.Context) {
 	var orders []OrderResponse
 
-	db := config.InitDB()
+	db := database.InitDB()
 	if err := db.Table("oder_items").
 		Select("order_id, user_id_no AS user_id, order_status AS status, payment_m AS payment_mode, total_amount, created_at").
 		Order("user_id_no ASC").
@@ -143,7 +143,7 @@ func ShowOrderById(c *gin.Context) {
 	userID := c.Param("id")
 	var orders []OrderResponse
 
-	db := config.InitDB()
+	db := database.InitDB()
 	if err := db.Table("oder_items").
 		Where("user_id_no = ?", userID).
 		Select("order_id, order_status AS status, payment_m AS payment_mode, total_amount, created_at").
@@ -160,7 +160,7 @@ func ShowOrderById(c *gin.Context) {
 func BlockUser(c *gin.Context) {
 	userID := c.Param("id")
 
-	db := config.InitDB()
+	db := database.InitDB()
 	if err := db.Model(&models.User{}).Where("id = ?", userID).Update("block_status", true).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to block user"})
 		return
@@ -173,7 +173,7 @@ func BlockUser(c *gin.Context) {
 func UnBlockUser(c *gin.Context) {
 	userID := c.Param("id")
 
-	db := config.InitDB()
+	db := database.InitDB()
 	if err := db.Model(&models.User{}).Where("id = ?", userID).Update("block_status", false).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unblock user"})
 		return

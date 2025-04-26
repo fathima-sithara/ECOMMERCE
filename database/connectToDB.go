@@ -1,4 +1,4 @@
-package config
+package database
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/fathima-sithara/ecommerce/models"
+	"github.com/fathimasithara01/ecommerce/models"
 )
 
 var Db *gorm.DB

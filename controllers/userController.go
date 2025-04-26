@@ -7,14 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 
-	"github.com/fathima-sithara/ecommerce/config"
-	"github.com/fathima-sithara/ecommerce/models"
-	"github.com/fathima-sithara/ecommerce/utils"
+	"github.com/fathimasithara01/ecommerce/database"
+	"github.com/fathimasithara01/ecommerce/models"
+	"github.com/fathimasithara01/ecommerce/utils"
 )
 
 var validate = validator.New()
 
-// SignUp handles user registration
 func SignUp(c *gin.Context) {
 	var user models.User
 
@@ -24,13 +23,11 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	// Validate input using struct tags
 	if err := validate.Struct(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Validation failed", "details": err.Error()})
 		return
 	}
 
-	// Hash user password
 	if err := utils.UserHashPassword(user.Password); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
@@ -42,8 +39,7 @@ func SignUp(c *gin.Context) {
 		return
 	}
 	user.Otp = otp
-	// Save user to database
-	if err := config.InitDB().Create(&user).Error; err != nil {
+	if err := database.InitDB().Create(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user", "details": err.Error()})
 		return
 	}
@@ -53,13 +49,11 @@ func SignUp(c *gin.Context) {
 	})
 }
 
-// UserLogin is the login input payload
 type UserLogin struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
 
-// LoginUser handles user login and JWT generation
 func LoginUser(c *gin.Context) {
 	var input UserLogin
 	var user models.User
@@ -69,19 +63,17 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	// Validate input
 	if err := validate.Struct(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Validation error", "details": err.Error()})
 		return
 	}
 
-	db := config.InitDB()
+	db := database.InitDB()
 	if err := db.Where("email = ?", input.Email).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
 
-	// Check verification and block status
 	if !user.Verified {
 		db.Delete(&user)
 		c.JSON(http.StatusUnprocessableEntity, gin.H{

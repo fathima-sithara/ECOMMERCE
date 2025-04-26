@@ -3,8 +3,8 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/fathima-sithara/ecommerce/controllers"
-	"github.com/fathima-sithara/ecommerce/middleware"
+	"github.com/fathimasithara01/ecommerce/controllers"
+	"github.com/fathimasithara01/ecommerce/middleware"
 )
 
 func AdminRoutes(c *gin.Engine) {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/fathima-sithara/ecommerce/utils"
+	"github.com/fathimasithara01/ecommerce/utils"
 )
 
 func UserAuth() gin.HandlerFunc {

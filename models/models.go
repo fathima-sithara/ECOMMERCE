@@ -16,8 +16,7 @@ type User struct {
 	Otp          string `json:"otp"`
 	Block_Status bool   `json:"block_status" gorm:"not null"`
 	Verified     bool   `json:"verified" gorm:"not null"`
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	gorm.Model
 }
 
 type Admin struct {

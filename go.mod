@@ -1,4 +1,4 @@
-module github.com/fathima-sithara/ecommerce
+module github.com/fathimasithara01/ecommerce
 
 go 1.24.0
 
