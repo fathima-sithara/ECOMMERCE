@@ -10,5 +10,5 @@ func Routes(router *gin.Engine) {
 	v1 := router.Group(apiVersion)
 
 	UserRoutes(v1)
-	AdminRoutes(v1)
+	// AdminRoutes(v1)
 }

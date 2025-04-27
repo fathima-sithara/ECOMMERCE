@@ -1,48 +1,47 @@
 package response
 
-type Sucess struct {
-	Code   int
-	Status bool
-	Data   interface{}
+/****Add the Response JSON model structs here***/
+type Success struct {
+	Code   int         `json:"code"`
+	Status bool        `json:"status"`
+	Data   interface{} `json:"data"`
 }
-
-type Error struct {
-	Code   int
-	Status bool
-	Error  string
-}
-
 type SuccessMsg struct {
-	Code    int
-	Status  bool
-	Data    interface{}
-	Message string
+	Code    int         `json:"code"`
+	Status  bool        `json:"status"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+type Error struct {
+	Code   int    `json:"code"`
+	Status bool   `json:"status"`
+	Error  string `json:"error"`
 }
 
-func SuccessResponse(data interface{}) Sucess {
-	result := Sucess{
+func SuccessResponse(data interface{}) Success {
+	result := Success{
 		Code:   200,
 		Status: true,
 		Data:   data,
 	}
 	return result
 }
-
-func SuccessResponseMsg(data interface{}, msg string) SuccessMsg {
+func SuccessResponseMsg(data interface{}, message string) SuccessMsg {
 	result := SuccessMsg{
 		Code:    200,
 		Status:  true,
+		Message: message,
 		Data:    data,
-		Message: msg,
 	}
 	return result
 }
+func ErrorMessage(code int, e error) Error {
 
-func ErrorResponse(code int, err error) Error {
-	result := Error{
+	errMsg := Error{
+		Status: false,
 		Code:   code,
-		Status: true,
-		Error:  err.Error(),
+		Error:  e.Error(),
 	}
-	return result
+
+	return errMsg
 }

@@ -1,122 +1,174 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/fathimasithara01/ecommerce/database"
-	"github.com/fathimasithara01/ecommerce/src/models"
 	"github.com/fathimasithara01/ecommerce/src/services"
-	"github.com/fathimasithara01/ecommerce/utils"
 	"github.com/fathimasithara01/ecommerce/utils/constant"
-	"github.com/fathimasithara01/ecommerce/utils/jwt"
 	"github.com/fathimasithara01/ecommerce/utils/response"
 	validator "github.com/fathimasithara01/ecommerce/utils/validation"
 )
 
-type User struct {
-	FirstName string `json:"first_name" gorm:"not null" `
-	LastName  string `json:"last_name" gorm:"not null"`
-	Email     string `json:"email" gorm:"not null;unique" validate:"required"`
-	Password  string `json:"password" gorm:"not null" validate:"required"`
-	Phone     string `json:"phone" gorm:"not null;" `
+type RegisterUserRequest struct {
+	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=6"`
+	Phone    string `json:"phone" binding:"required" `
 }
 
-func SignUp(c *gin.Context) {
-	var req User
+// Signup
+func RegisterUser(c *gin.Context) {
+	var request RegisterUserRequest
 
-	// Bind incoming JSON to struct
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, response.ErrorResponse(constant.BADREQUEST, err))
+	// Bind JSON and validate fields
+	if err := c.ShouldBindJSON(&request); err != nil {
 
+		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, err))
 		return
 	}
-
-	err := validator.Validate(req)
+	err := validator.Validate(&request)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.ErrorResponse(constant.BADREQUEST, err))
-	}
-
-	us := services.UserServices{}
-	user := models.User{
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Email:     req.Email,
-		Password:  req.Password,
-		Phone:     req.Phone,
-	}
-	if err := us.RegisterUser(user); err != nil {
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse(constant.INTERNALSERVERERROR, err))
+		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, err))
 		return
 	}
-
-	c.JSON(http.StatusOK, response.SuccessResponseMsg(map[string]interface{}{
-		"data": "",
-	}, "succes fully registration"))
-}
-
-type UserLogin struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
-}
-
-func LoginUser(c *gin.Context) {
-	var input UserLogin
-	var user models.User
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input", "details": err.Error()})
-		return
-	}
-
-	// if err := validate.Struct(&input); err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Validation error", "details": err.Error()})
-	// 	return
-	// }
-
-	db := database.PgSQLDB
-	if err := db.Where("email = ?", input.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
-		return
-	}
-
-	if !user.Verified {
-		db.Delete(&user)
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"error":   "User not verified. Account deleted.",
-			"message": "Please complete OTP verification.",
-		})
-		return
-	}
-
-	// if user.Block_Status {
-	// 	c.JSON(http.StatusForbidden, gin.H{"error": "User is blocked by admin"})
-	// 	return
-	// }
-
-	// Check password
-	if err := utils.UserCheckPassword(input.Password); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
-	}
-
-	// Generate JWT
-	userID := strconv.Itoa(int(user.ID))
-	tokens, err := jwt.GenerateJWT(userID)
+	// Call user registration service
+	userService := services.UserServices{}
+	token, err := userService.Register(request.Username, request.Email, request.Password, request.Phone)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		c.JSON(http.StatusInternalServerError, response.ErrorMessage(constant.INTERNALSERVERERROR, err))
 		return
 	}
 
-	// Set secure cookie
-	c.SetCookie("Userutils", tokens["access_token"], 3600*24*30, "/", "", false, true)
+	// Success response
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successful",
-		"token":   tokens["access_token"],
-	})
+	c.JSON(http.StatusOK, response.SuccessResponse(map[string]interface{}{
+		"message":  "User registered successfully",
+		"message2": "pleas veify your email",
+		"token":    token,
+	}))
+
+}
+
+// User Login
+func UserAuthLogin(c *gin.Context) {
+	var request struct {
+		Email    string `json:"email" binding:"required"`
+		Password string `json:"password" binding:"required,min=6"`
+	}
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, err))
+		return
+	}
+	err := validator.Validate(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, err))
+		return
+	}
+	userService := services.UserServices{}
+	localToken, u, formsubmitted, err := userService.Login(request.Email, request.Password)
+	if err != nil {
+		// Check if the error is related to a missing user (custom error message)
+		if err.Error() == "We couldn't find any account associated with this email." {
+			c.JSON(http.StatusUnauthorized, response.ErrorMessage(constant.UNAUTHORIZED, err))
+			return
+		}
+
+	}
+	c.JSON(http.StatusOK, response.SuccessResponse(map[string]interface{}{
+		"local_token":    localToken,
+		"form_submitted": formsubmitted,
+		"user":           u,
+	}))
+}
+func SentOtp(c *gin.Context) {
+	meth := c.Query("meth")
+	if meth == "" {
+		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, errors.New("pleas enter methord")))
+		return
+	}
+
+	var request struct {
+		Email string `json:"email"`
+	}
+	if err := c.ShouldBindJSON(&request); err != nil {
+
+		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, err))
+		return
+	}
+	err := validator.Validate(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, err))
+		return
+	}
+	userService := services.UserServices{}
+	token, res, err := userService.OtpService(request.Email, meth)
+	if err != nil {
+		// Check if the error is related to a missing user (custom error message)
+		c.JSON(http.StatusInternalServerError, response.ErrorMessage(constant.INTERNALSERVERERROR, err))
+		return
+	}
+	c.JSON(http.StatusOK, response.SuccessResponse(map[string]interface{}{
+		"message": res,
+		"token":   token,
+	}))
+}
+func ForgotPassword(c *gin.Context) {
+	token := c.Query("token")
+	var request struct {
+		Password string `json:"password" binding:"required,min=6"`
+	}
+	if err := c.ShouldBindJSON(&request); err != nil {
+
+		// Return any other validation errors
+		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, err))
+		return
+	}
+	err := validator.Validate(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, err))
+		return
+	}
+	userService := services.UserServices{}
+	err = userService.ForgotPassword(request.Password, token)
+	if err != nil {
+		// Check if the error is related to a missing user (custom error message)
+		c.JSON(http.StatusInternalServerError, response.ErrorMessage(constant.INTERNALSERVERERROR, err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.SuccessResponse(map[string]interface{}{
+		"message": "Password reset successfully",
+	}))
+}
+
+func UserNameValidation(c *gin.Context) {
+	var request struct {
+		Username string `json:"username" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, err))
+		return
+	}
+	err := validator.Validate(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, err))
+		return
+	}
+
+	userService := services.UserServices{}
+	err = userService.ValidateUserName(request.Username)
+	if err != nil {
+		// Check if the error is related to a missing user (custom error message)
+		c.JSON(http.StatusInternalServerError, response.ErrorMessage(constant.INTERNALSERVERERROR, err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.SuccessResponse(map[string]interface{}{
+		"message": "you can use this user name",
+	}))
 }
 
 // UserHome serves the protected home endpoint

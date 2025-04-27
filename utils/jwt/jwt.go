@@ -1,87 +1,54 @@
 package jwt
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt"
+	"github.com/spf13/viper"
 )
 
-var JwtKey = []byte(os.Getenv("SECRET"))
-
-type JWTClaim struct {
-	Id string `json:"id"`
-	jwt.RegisteredClaims
-}
-
-// GenerateJWT creates both access and refresh tokens
-func GenerateJWT(id string) (map[string]string, error) {
-	// Access Token Claims
-	expirationTime := time.Now().Add(1 * time.Hour)
-	accesClaims := &JWTClaim{
-		Id: id,
-		RegisteredClaims: jwt.RegisteredClaims{
-			// ExpiresAt: expirationTime,
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Subject:   id,
-		},
-	}
-
-	// Create access token
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, accesClaims)
-	tokenString, err := token.SignedString(JwtKey)
+func GenerateJWT(userID uint, email string, role string) (string, error) {
+	expiration, err := time.ParseDuration(os.Getenv("jwt.expiration"))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
+	// fmt.Println("lsfkjglsfjg", viper.GetString("jwt.expiration"))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":    userID,
+		"email": email,
+		"role":  role, // Include role in the JWT token
+		"exp":   time.Now().Add(expiration).Unix(),
+	})
 
-	// Refresh Token Claims (simpler, using MapClaims)
-	refrehToken := jwt.New(jwt.SigningMethodES256)      // Creating a New JWT (Refresh Token)
-	refreshClaims := refrehToken.Claims.(jwt.MapClaims) //Setting the Claims (Data) for the Token
-	refreshClaims["id"] = id
-	refreshClaims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-
-	// Sign refresh token (ideally use a separate secret for refresh tokens)
-	reefreshTokenString, err := refrehToken.SignedString([]byte("secret")) // Sign the token using a secret key to ensure it’s secure and Return the signed refresh token.
+	tokenString, err := token.SignedString([]byte(viper.GetString("jwt.secret")))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return map[string]string{
-		"access_token":  tokenString,
-		"refresh_Token": reefreshTokenString,
-	}, nil
+	return tokenString, nil
 }
+func ExtractClaims(tokenString string) (uint, string, string, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("jwt.secret")), nil // Use correct secret key
+	})
 
-var P string //// Global variable to store the ID from the claims
-
-// ValidateToken validates the JWT token
-func ValidateToken(signedToken string) error {
-	token, err := jwt.ParseWithClaims(
-		signedToken,
-		&JWTClaim{},
-		func(token *jwt.Token) (interface{}, error) {
-			return JwtKey, nil
-		},
-	)
-
-	if err != nil || !token.Valid {
-		return errors.New("invalid token")
+	if err != nil {
+		return 0, "", "", fmt.Errorf("invalid token: %v", err)
 	}
 
-	claims, ok := token.Claims.(*JWTClaim)
-	if !ok {
-		return errors.New("couldn't parse claims")
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		id, okID := claims["id"].(float64) // JWT stores numbers as float64
+		email, okEmail := claims["email"].(string)
+		role, okRole := claims["role"].(string)
+
+		if !okID || !okEmail || !okRole {
+			return 0, "", "", fmt.Errorf("invalid claim format")
+		}
+
+		return uint(id), email, role, nil
 	}
 
-	// Set the global user ID from claims for use in the middleware
-	P = claims.Id
-
-	// Check token expiration
-	if claims.ExpiresAt.Time.Before(time.Now()) {
-		return errors.New("token expired")
-	}
-
-	return nil
+	return 0, "", "", fmt.Errorf("invalid token claims")
 }

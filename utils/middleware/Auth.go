@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/fathimasithara01/ecommerce/utils/jwt"
+	// "github.com/fathimasithara01/ecommerce/utils/jwt"
 )
 
 func UserAuth() gin.HandlerFunc {
@@ -18,14 +18,14 @@ func UserAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		err = jwt.ValidateToken(tokenString)
+		// err = jwt.ValidateToken(tokenString)
 		if err != nil {
 			c.JSON(401, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
-		userId := jwt.P
-		c.Set("userid", userId)
+		// userId := jwt.P
+		// c.Set("userid", userId)
 		c.Next()
 
 	}
@@ -39,7 +39,7 @@ func AdminAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		err = jwt.ValidateToken(tokenStirng)
+		// err = jwt.ValidateToken(tokenStirng)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()

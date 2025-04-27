@@ -8,14 +8,16 @@ import (
 
 type User struct {
 	gorm.Model
-	FirstName   string `json:"first_name" gorm:"not null" validate:"required,min=2,max=50"`
-	LastName    string `json:"last_name" gorm:"not null" validate:"required,min=2,max=50"`
-	Email       string `json:"email" gorm:"not null;unique" validate:"required"`
-	Password    string `json:"password" gorm:"not null" validate:"required"`
-	Phone       string `json:"phone" gorm:"not null;" `
-	Otp         string `json:"otp"`
-	BlockStatus bool   `json:"block_status" gorm:"not null;default:false"`
-	Verified    bool   `json:"verified" gorm:"not null;default:false"`
+	FirstName    string    `json:"first_name" gorm:"not null" validate:"required,min=2,max=50"`
+	LastName     string    `json:"last_name" gorm:"not null" validate:"required,min=2,max=50"`
+	UserName     string    `json:"user_name" gorm:"uniqueIndex;type:varchar(50);not null"`
+	Email        string    `json:"email" gorm:"not null;unique" validate:"required"`
+	Password     string    `json:"password" gorm:"not null" validate:"required"`
+	Phone        string    `json:"phone" gorm:"not null;" `
+	Otp          string    `json:"otp"`
+	BlockStatus  bool      `json:"block_status" gorm:"not null;default:false"`
+	Verified     bool      `json:"verified" gorm:"not null;default:false"`
+	OtpCreatedAt time.Time `json:"otp_created_at"`
 }
 
 type Admin struct {
