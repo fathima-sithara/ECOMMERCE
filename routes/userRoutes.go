@@ -1,13 +1,12 @@
 package routes
 
 import (
+	"github.com/fathimasithara01/ecommerce/src/controllers"
+	"github.com/fathimasithara01/ecommerce/utils/middleware"
 	"github.com/gin-gonic/gin"
-
-	"github.com/fathimasithara01/ecommerce/controllers"
-	"github.com/fathimasithara01/ecommerce/middleware"
 )
 
-func UserRoutes(router *gin.Engine) {
+func UserRoutes(router *gin.RouterGroup) {
 	user := router.Group("/user")
 	{
 		user.POST("/signup", controllers.SignUp)

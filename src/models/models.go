@@ -7,19 +7,19 @@ import (
 )
 
 type User struct {
-	ID           uint   `json:"id" gorm:"primaryKey;unique"`
-	First_Name   string `json:"first_name" gorm:"not null" validate:"required,min=2,max=50"`
-	Last_Name    string `json:"last_name" gorm:"not null" validate:"required,min=2,max=50"`
-	Email        string `json:"email" gorm:"not null;unique" validate:"required"`
-	Password     string `json:"password" gorm:"not null" validate:"required"`
-	Phone        string `json:"phone" gorm:"not null;unique" validate:"required"`
-	Otp          string `json:"otp"`
-	Block_Status bool   `json:"block_status" gorm:"not null"`
-	Verified     bool   `json:"verified" gorm:"not null"`
 	gorm.Model
+	FirstName   string `json:"first_name" gorm:"not null" validate:"required,min=2,max=50"`
+	LastName    string `json:"last_name" gorm:"not null" validate:"required,min=2,max=50"`
+	Email       string `json:"email" gorm:"not null;unique" validate:"required"`
+	Password    string `json:"password" gorm:"not null" validate:"required"`
+	Phone       string `json:"phone" gorm:"not null;" `
+	Otp         string `json:"otp"`
+	BlockStatus bool   `json:"block_status" gorm:"not null;default:false"`
+	Verified    bool   `json:"verified" gorm:"not null;default:false"`
 }
 
 type Admin struct {
+	gorm.Model
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }

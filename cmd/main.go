@@ -5,8 +5,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/fathimasithara01/ecommerce/config"
 	"github.com/fathimasithara01/ecommerce/database"
+	"github.com/fathimasithara01/ecommerce/migration"
 	"github.com/fathimasithara01/ecommerce/routes"
+	"github.com/fathimasithara01/ecommerce/src/repository"
+	validator "github.com/fathimasithara01/ecommerce/utils/validation"
 )
 
 func main() {
@@ -15,12 +19,14 @@ func main() {
 		port = "8080"
 	}
 
-	database.InitDB()
-
+	validator.Init()
+	config.LoadConfig()
+	database.GetInstancepostgres()
+	migration.Migration()
+	repository.PgSQLInit()
 	router := gin.Default()
 	// router.LoadHTMLGlob("templates/*")
-	routes.UserRoutes(router)
-	routes.AdminRoutes(router)
 
+	routes.Routes(router)
 	router.Run()
 }

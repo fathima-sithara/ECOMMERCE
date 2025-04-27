@@ -7,8 +7,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/fathimasithara01/ecommerce/database"
-	"github.com/fathimasithara01/ecommerce/models"
-	"github.com/fathimasithara01/ecommerce/utils"
+	"github.com/fathimasithara01/ecommerce/src/models"
 )
 
 type OTPRequest struct {
@@ -36,7 +35,7 @@ func ValidateOTPHandler(c *gin.Context) {
 		return
 	}
 
-	db := database.InitDB()
+	db := database.PgSQLDB
 	var user models.User
 
 	if err := db.Where("email = ? AND otp = ?", req.Email, req.OTP).First(&user).Error; err != nil {
@@ -64,7 +63,7 @@ func SendForgotPasswordOTPHandler(c *gin.Context) {
 		return
 	}
 
-	db :=database.InitDB()
+	db := database.PgSQLDB
 	var user models.User
 
 	if err := db.Where("email = ?", req.Email).First(&user).Error; err != nil {
@@ -72,13 +71,13 @@ func SendForgotPasswordOTPHandler(c *gin.Context) {
 		return
 	}
 
-	otp, err := utils.VerifyAndSendOTP(user.Email)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP"})
-		return
-	}
+	// otp, err := utils.VerifyAndSendOTP(user.Email)
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP"})
+	// 	return
+	// }
 
-	if err := db.Model(&user).Update("otp", otp).Error; err != nil {
+	if err := db.Model(&user).Update("otp", "ot").Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store OTP"})
 		return
 	}
@@ -100,7 +99,7 @@ func ChangePasswordHandler(c *gin.Context) {
 		return
 	}
 
-	db := database.InitDB()
+	db := database.PgSQLDB
 	var user models.User
 
 	if err := db.Where("email = ?", req.Email).First(&user).Error; err != nil {

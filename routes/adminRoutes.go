@@ -3,11 +3,11 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/fathimasithara01/ecommerce/controllers"
-	"github.com/fathimasithara01/ecommerce/middleware"
+	"github.com/fathimasithara01/ecommerce/src/controllers"
+	"github.com/fathimasithara01/ecommerce/utils/middleware"
 )
 
-func AdminRoutes(c *gin.Engine) {
+func AdminRoutes(c *gin.RouterGroup) {
 	admin := c.Group("/admin")
 	{
 		admin.POST("/signup", controllers.AdminSignup)

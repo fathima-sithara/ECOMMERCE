@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/fathimasithara01/ecommerce/database"
-	"github.com/fathimasithara01/ecommerce/models"
+	"github.com/fathimasithara01/ecommerce/src/models"
 )
 
 func AddToCart(c *gin.Context) {
@@ -31,7 +31,7 @@ func AddToCart(c *gin.Context) {
 		return
 	}
 
-	db := database.InitDB()
+	db := database.PgSQLDB
 
 	// Check if product exists
 	var product models.Product
@@ -107,7 +107,7 @@ func ViewCart(c *gin.Context) {
 	}
 
 	var cartItems []CartItemResponse
-	db := database.InitDB()
+	db := database.PgSQLDB
 
 	// Join carts and products
 	err = db.Table("carts").
@@ -148,7 +148,7 @@ func DeleteCart(c *gin.Context) {
 		return
 	}
 
-	db := database.InitDB()
+	db := database.PgSQLDB
 
 	// Check if the cart item exists for this user
 	var cart models.Cart

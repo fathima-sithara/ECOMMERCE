@@ -5,48 +5,56 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 
 	"github.com/fathimasithara01/ecommerce/database"
-	"github.com/fathimasithara01/ecommerce/models"
+	"github.com/fathimasithara01/ecommerce/src/models"
+	"github.com/fathimasithara01/ecommerce/src/services"
 	"github.com/fathimasithara01/ecommerce/utils"
+	"github.com/fathimasithara01/ecommerce/utils/constant"
+	"github.com/fathimasithara01/ecommerce/utils/jwt"
+	"github.com/fathimasithara01/ecommerce/utils/response"
+	validator "github.com/fathimasithara01/ecommerce/utils/validation"
 )
 
-var validate = validator.New()
+type User struct {
+	FirstName string `json:"first_name" gorm:"not null" `
+	LastName  string `json:"last_name" gorm:"not null"`
+	Email     string `json:"email" gorm:"not null;unique" validate:"required"`
+	Password  string `json:"password" gorm:"not null" validate:"required"`
+	Phone     string `json:"phone" gorm:"not null;" `
+}
 
 func SignUp(c *gin.Context) {
-	var user models.User
+	var req User
 
 	// Bind incoming JSON to struct
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input", "details": err.Error()})
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse(constant.BADREQUEST, err))
+
 		return
 	}
 
-	if err := validate.Struct(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Validation failed", "details": err.Error()})
-		return
-	}
-
-	if err := utils.UserHashPassword(user.Password); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		return
-	}
-
-	otp, err := utils.VerifyAndSendOTP(user.Email)
+	err := validator.Validate(req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP", "details": err.Error()})
-		return
+		c.JSON(http.StatusBadRequest, response.ErrorResponse(constant.BADREQUEST, err))
 	}
-	user.Otp = otp
-	if err := database.InitDB().Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user", "details": err.Error()})
+
+	us := services.UserServices{}
+	user := models.User{
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Email:     req.Email,
+		Password:  req.Password,
+		Phone:     req.Phone,
+	}
+	if err := us.RegisterUser(user); err != nil {
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse(constant.INTERNALSERVERERROR, err))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Regitration successful. Please verify your account via OTP.",
-	})
+	c.JSON(http.StatusOK, response.SuccessResponseMsg(map[string]interface{}{
+		"data": "",
+	}, "succes fully registration"))
 }
 
 type UserLogin struct {
@@ -63,12 +71,12 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	if err := validate.Struct(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Validation error", "details": err.Error()})
-		return
-	}
+	// if err := validate.Struct(&input); err != nil {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Validation error", "details": err.Error()})
+	// 	return
+	// }
 
-	db := database.InitDB()
+	db := database.PgSQLDB
 	if err := db.Where("email = ?", input.Email).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
@@ -83,10 +91,10 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	if user.Block_Status {
-		c.JSON(http.StatusForbidden, gin.H{"error": "User is blocked by admin"})
-		return
-	}
+	// if user.Block_Status {
+	// 	c.JSON(http.StatusForbidden, gin.H{"error": "User is blocked by admin"})
+	// 	return
+	// }
 
 	// Check password
 	if err := utils.UserCheckPassword(input.Password); err != nil {
@@ -96,7 +104,7 @@ func LoginUser(c *gin.Context) {
 
 	// Generate JWT
 	userID := strconv.Itoa(int(user.ID))
-	tokens, err := utils.GenerateJWT(userID)
+	tokens, err := jwt.GenerateJWT(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
