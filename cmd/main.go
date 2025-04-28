@@ -10,7 +10,7 @@ import (
 	"github.com/fathimasithara01/ecommerce/migration"
 	"github.com/fathimasithara01/ecommerce/routes"
 	"github.com/fathimasithara01/ecommerce/src/repository"
-	validator "github.com/fathimasithara01/ecommerce/utils/validation"
+	validator "github.com/fathimasithara01/ecommerce/utils/validator"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 
 	validator.Init()
 	config.LoadConfig()
-	database.GetInstancepostgres()
+	database.GetInstancePostgres()
 	migration.Migration()
 	repository.PgSQLInit()
 	router := gin.Default()

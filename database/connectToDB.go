@@ -13,7 +13,7 @@ import (
 var pgOnce sync.Once
 var PgSQLDB *gorm.DB
 
-func GetInstancepostgres() (dba *gorm.DB) {
+func GetInstancePostgres() (dba *gorm.DB) {
 	pgOnce.Do(func() {
 		dsn := fmt.Sprintf(
 			"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Shanghai",

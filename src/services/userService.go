@@ -15,12 +15,10 @@ import (
 	"github.com/fathimasithara01/ecommerce/utils/utils"
 )
 
-type UserServices struct {
-}
+type UserServices struct{}
 
 func (s *UserServices) db() *gorm.DB {
 	return database.PgSQLDB
-
 }
 
 func (s *UserServices) Register(username, email, password, phone string) (string, error) {
@@ -31,7 +29,7 @@ func (s *UserServices) Register(username, email, password, phone string) (string
 	}
 	// check if username already exists
 	if err := s.db().Where("username=?", username).First(&existingUser).Error; err != nil {
-		return "", fmt.Errorf("username akreaddy exist")
+		return "", fmt.Errorf("username alreaddy exist")
 	}
 
 	// create a new user

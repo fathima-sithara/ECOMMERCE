@@ -9,7 +9,7 @@ import (
 	"github.com/fathimasithara01/ecommerce/src/services"
 	"github.com/fathimasithara01/ecommerce/utils/constant"
 	"github.com/fathimasithara01/ecommerce/utils/response"
-	validator "github.com/fathimasithara01/ecommerce/utils/validation"
+	validator "github.com/fathimasithara01/ecommerce/utils/validator"
 )
 
 type RegisterUserRequest struct {
@@ -23,9 +23,7 @@ type RegisterUserRequest struct {
 func RegisterUser(c *gin.Context) {
 	var request RegisterUserRequest
 
-	// Bind JSON and validate fields
 	if err := c.ShouldBindJSON(&request); err != nil {
-
 		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, err))
 		return
 	}
@@ -34,7 +32,7 @@ func RegisterUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response.ErrorMessage(constant.BADREQUEST, err))
 		return
 	}
-	// Call user registration service
+
 	userService := services.UserServices{}
 	token, err := userService.Register(request.Username, request.Email, request.Password, request.Phone)
 	if err != nil {
